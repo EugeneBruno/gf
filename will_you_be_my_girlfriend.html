@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Little Story For You</title>
+
+  <!-- Google Fonts: Playfair Display (italic & bold) + Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream: '#FFF9F7',
+            blush: '#FFE4E9',
+            roseDeep: '#E11D48',
+            roseSoft: '#FB7185',
+            ink: '#1F2937',
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* ============================================================
+       BASE & ATMOSPHERIC BACKGROUND
+       ============================================================ */
+    html {
+      scroll-behavior: smooth;
+      background-color: #FFF9F7;
+      color: #1F2937;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: radial-gradient(circle at 15% 15%, rgba(251, 113, 133, 0.14), transparent 45%),
+                  radial-gradient(circle at 85% 30%, rgba(255, 228, 233, 0.7), transparent 50%),
+                  radial-gradient(circle at 50% 85%, rgba(225, 29, 72, 0.08), transparent 55%),
+                  #FFF9F7;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Floating bokeh & subtle hearts background layer */
+    .ambient-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .bokeh-orb {
+      position: absolute;
+      border-radius: 9999px;
+      filter: blur(36px);
+      opacity: 0.35;
+      animation: floatOrb 16s ease-in-out infinite alternate;
+    }
+
+    .floating-heart {
+      position: absolute;
+      bottom: -40px;
+      color: rgba(251, 113, 133, 0.28);
+      animation: riseHeart linear infinite;
+      user-select: none;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(24px, -32px) scale(1.12); }
+    }
+
+    @keyframes riseHeart {
+      0% {
+        transform: translateY(0) translateX(0) rotate(0deg) scale(0.8);
+        opacity: 0;
+      }
+      15% { opacity: 0.5; }
+      85% { opacity: 0.35; }
+      100% {
+        transform: translateY(-110vh) translateX(28px) rotate(22deg) scale(1.15);
+        opacity: 0;
+      }
+    }
+
+    /* Gentle scroll-down bounce */
+    @keyframes gentleBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(8px); }
+    }
+    .animate-gentle-bounce {
+      animation: gentleBounce 2.2s ease-in-out infinite;
+    }
+
+    /* Scroll reveal animation for milestone cards */
+    .reveal-card {
+      opacity: 0;
+      transform: translateY(28px) scale(0.98);
+      transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .reveal-card.is-visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* ============================================================
+       INTERACTIVE SEALED ENVELOPE (END OF ACT 1)
+       ============================================================ */
+    .envelope-stage {
+      perspective: 1000px;
+    }
+
+    .envelope-wrapper {
+      position: relative;
+      width: 280px;
+      height: 186px;
+      margin: 0 auto;
+      cursor: pointer;
+      transition: transform 0.35s ease;
+    }
+    .envelope-wrapper:hover {
+      transform: translateY(-4px);
+    }
+
+    .envelope-back {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(145deg, #FDE2E7, #F9CAD4);
+      border-radius: 16px;
+      box-shadow: 0 18px 36px -12px rgba(225, 29, 72, 0.22),
+                  0 6px 14px -4px rgba(31, 41, 55, 0.08);
+      z-index: 1;
+    }
+
+    /* Letter card tucked inside */
+    .envelope-letter {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 14px;
+      height: 156px;
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 16px 14px;
+      box-shadow: 0 6px 20px rgba(31, 41, 55, 0.1);
+      z-index: 2;
+      transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.25s,
+                  box-shadow 0.6s ease 0.25s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border: 1px solid rgba(251, 113, 133, 0.2);
+    }
+
+    /* Front pocket triangles */
+    .envelope-pocket {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      border-radius: 16px;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .envelope-pocket::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, #FFF0F3 0%, #FFE0E7 100%);
+      clip-path: polygon(0 0, 50% 56%, 100% 0, 100% 100%, 0 100%);
+    }
+    .envelope-pocket::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(251, 113, 133, 0.12), rgba(225, 29, 72, 0.06));
+      clip-path: polygon(0 100%, 50% 48%, 100% 100%);
+    }
+
+    /* Top flap */
+    .envelope-flap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 108px;
+      background: linear-gradient(180deg, #FFD6DF 0%, #FBC5D1 100%);
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+      transform-origin: top center;
+      transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 4;
+      filter: drop-shadow(0 4px 6px rgba(225, 29, 72, 0.12));
+    }
+
+    /* Wax heart seal */
+    .wax-seal {
+      position: absolute;
+      top: 84px;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 48px;
+      height: 48px;
+      border-radius: 9999px;
+      background: radial-gradient(circle at 35% 30%, #FB7185, #E11D48 70%, #BE123C 100%);
+      box-shadow: 0 6px 14px rgba(225, 29, 72, 0.42),
+                  inset 0 2px 4px rgba(255, 255, 255, 0.35);
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFF9F7;
+      font-size: 1.15rem;
+      transition: transform 0.45s ease, opacity 0.45s ease;
+    }
+
+    /* Opened state */
+    .envelope-wrapper.is-open .envelope-flap {
+      transform: rotateX(180deg);
+      z-index: 1;
+    }
+    .envelope-wrapper.is-open .wax-seal {
+      transform: translate(-50%, -50%) scale(0.4);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .envelope-wrapper.is-open .envelope-letter {
+      transform: translateY(-92px);
+      z-index: 6;
+      box-shadow: 0 20px 35px -8px rgba(225, 29, 72, 0.22);
+    }
+
+    /* ============================================================
+       SMOOTH ACT TRANSITIONS & POLAROID STYLING
+       ============================================================ */
+    .act-panel {
+      transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .act-hidden {
+      display: none !important;
+    }
+    .act-fade-in {
+      animation: fadeSlideIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Polaroid frame */
+    .polaroid {
+      background: #FFFFFF;
+      padding: 10px 10px 26px 10px;
+      border-radius: 14px;
+      box-shadow: 0 12px 28px -8px rgba(31, 41, 55, 0.12),
+                  0 2px 6px rgba(31, 41, 55, 0.05);
+      border: 1px solid rgba(251, 113, 133, 0.14);
+    }
+
+    /* Playful No button smooth dodge */
+    #noBtn {
+      transition: left 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  top 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  transform 0.22s ease,
+                  background-color 0.2s ease;
+    }
+
+    #yesBtn {
+      transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  box-shadow 0.25s ease;
+    }
+
+    /* Fullscreen celebration canvas */
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 50;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-rose-200 selection:text-rose-900">
+
+  <!-- Ambient Floating Bokeh & Hearts -->
+  <div class="ambient-bg" id="ambientBg" aria-hidden="true">
+    <div class="bokeh-orb w-64 h-64 bg-rose-300 -top-16 -left-16"></div>
+    <div class="bokeh-orb w-72 h-72 bg-pink-200 top-1/3 -right-20" style="animation-delay: -4s;"></div>
+    <div class="bokeh-orb w-56 h-56 bg-rose-200 bottom-10 left-1/4" style="animation-delay: -8s;"></div>
+  </div>
+
+  <!-- Confetti & Hearts Canvas for Finale -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- Main Centered Mobile-First Container -->
+  <main class="relative z-10 w-full max-w-md mx-auto px-5 pb-16">
+
+    <!-- ============================================================
+         ACT 1: THE STORY SCROLL
+         ============================================================ -->
+    <section id="act1" class="act-panel">
+
+      <!-- Hero Intro Screen -->
+      <header class="min-h-[92vh] flex flex-col items-center justify-center text-center py-12">
+        <span
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/80 backdrop-blur-sm border border-rose-200/80 text-xs font-semibold tracking-wide uppercase text-roseDeep shadow-sm mb-6"
+        >
+          <span>✨</span> A Little Note For You
+        </span>
+
+        <h1 class="font-serif text-4xl sm:text-5xl font-bold text-ink leading-tight tracking-tight">
+          Hey, <span id="heroHerName" class="italic text-roseDeep"></span>
+        </h1>
+
+        <p
+          id="heroSubtitle"
+          class="mt-5 text-base sm:text-lg text-gray-600 leading-relaxed max-w-xs mx-auto"
+        ></p>
+
+        <div class="mt-14 flex flex-col items-center gap-2 text-roseSoft">
+          <span class="text-xs font-semibold tracking-widest uppercase text-gray-400">
+            Scroll down
+          </span>
+          <a
+            href="#timelineSection"
+            aria-label="Scroll to our story"
+            class="w-10 h-10 rounded-full bg-white/90 border border-rose-200 shadow-sm flex items-center justify-center text-roseDeep animate-gentle-bounce"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </a>
+        </div>
+      </header>
+
+      <!-- Timeline Milestones -->
+      <div id="timelineSection" class="pt-4 pb-12">
+        <div class="text-center mb-10">
+          <p class="text-xs font-semibold tracking-widest uppercase text-roseSoft mb-2">Our Story So Far</p>
+          <h2 class="font-serif text-3xl font-bold italic text-ink">A few favorite moments</h2>
+        </div>
+
+        <!-- Vertical timeline wrapper -->
+        <div class="relative pl-7">
+          <!-- Subtle vertical line -->
+          <div
+            class="absolute left-2.5 top-2 bottom-4 w-0.5 bg-gradient-to-b from-rose-200 via-rose-300 to-rose-100 rounded-full"
+            aria-hidden="true"
+          ></div>
+
+          <!-- Milestones injected dynamically from CONFIG -->
+          <div id="milestonesList" class="space-y-9"></div>
+        </div>
+      </div>
+
+      <!-- Interactive Sealed Envelope -->
+      <div class="pt-10 pb-16 text-center reveal-card" id="envelopeSection">
+        <p class="text-xs font-semibold tracking-widest uppercase text-roseSoft mb-2">
+          And now...
+        </p>
+        <h3 class="font-serif text-2xl sm:text-3xl font-bold text-ink mb-8">
+          I left something inside for you
+        </h3>
+
+        <div class="envelope-stage pt-10 pb-4">
+          <div
+            id="envelopeWrapper"
+            class="envelope-wrapper"
+            role="button"
+            tabindex="0"
+            aria-label="Tap to open envelope"
+          >
+            <div class="envelope-back"></div>
+
+            <!-- Letter inside the envelope -->
+            <div class="envelope-letter">
+              <span class="text-roseDeep text-lg mb-1">💌</span>
+              <p class="font-serif italic font-bold text-ink text-base leading-snug">
+                Before I ask you something important...
+              </p>
+              <p class="text-xs text-gray-500 mt-1.5">
+                Let's see how well you know us first.
+              </p>
+            </div>
+
+            <div class="envelope-pocket"></div>
+            <div class="envelope-flap"></div>
+
+            <!-- Wax Heart Seal -->
+            <div class="wax-seal" aria-hidden="true">❤</div>
+          </div>
+        </div>
+
+        <p id="envelopePrompt" class="mt-5 text-sm font-medium text-roseDeep animate-pulse">
+          Tap the wax seal to open
+        </p>
+
+        <!-- Appears smoothly after envelope opens -->
+        <div id="envelopeContinueWrap" class="mt-6 opacity-0 pointer-events-none transition-all duration-500 translate-y-2">
+          <button
+            id="startQuizBtn"
+            type="button"
+            class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-roseDeep to-roseSoft text-white font-semibold text-base shadow-lg shadow-rose-300/50 active:scale-95 transition-transform"
+          >
+            Take the Mini-Quiz →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         ACT 2: THE MINI-QUIZ
+         ============================================================ -->
+    <section id="act2" class="act-panel act-hidden min-h-screen flex flex-col justify-center py-10">
+      <div class="bg-white/90 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-xl shadow-rose-200/40 border border-rose-100">
+        <!-- Progress Header -->
+        <div class="flex items-center justify-between text-xs font-semibold text-gray-400 mb-3">
+          <span class="uppercase tracking-wider text-roseDeep" id="quizProgressText">Question 1 of 3</span>
+          <span id="quizPercentText">33%</span>
+        </div>
+        <div class="w-full h-2 bg-rose-100 rounded-full overflow-hidden mb-7">
+          <div
+            id="quizProgressBar"
+            class="h-full bg-gradient-to-r from-roseDeep to-roseSoft rounded-full transition-all duration-500"
+            style="width: 33%;"
+          ></div>
+        </div>
+
+        <!-- Question Text -->
+        <h2
+          id="quizQuestionText"
+          class="font-serif text-2xl sm:text-3xl font-bold text-ink leading-snug mb-6"
+        ></h2>
+
+        <!-- Options List -->
+        <div id="quizOptions" class="space-y-3"></div>
+
+        <!-- Playful Reaction Toast -->
+        <div
+          id="quizReactionBox"
+          class="hidden mt-5 p-4 rounded-2xl bg-cream border border-rose-200/80 text-sm text-gray-700 leading-relaxed flex items-start gap-2.5"
+        >
+          <span class="text-lg leading-none mt-0.5">💬</span>
+          <p id="quizReactionText" class="font-medium"></p>
+        </div>
+
+        <!-- Next / Final Question Button -->
+        <div class="mt-6">
+          <button
+            id="quizNextBtn"
+            type="button"
+            class="hidden w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-roseDeep to-roseSoft text-white font-semibold text-base shadow-md shadow-rose-300/40 active:scale-95 transition-transform"
+          >
+            Next →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         ACT 3: THE PLAYFUL CLASSIC (THE BIG QUESTION)
+         ============================================================ -->
+    <section id="act3" class="act-panel act-hidden min-h-screen flex flex-col justify-center py-10">
+      <div class="bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-xl shadow-rose-200/50 border border-rose-100 text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blush text-roseDeep text-2xl mb-5 shadow-inner">
+          🌹
+        </div>
+
+        <p class="text-sm font-semibold tracking-wide text-roseSoft uppercase mb-2">
+          One last question, <span id="finalHerName"></span>...
+        </p>
+
+        <h2
+          id="finalQuestionText"
+          class="font-serif italic text-3xl sm:text-4xl font-bold text-ink leading-tight"
+        ></h2>
+
+        <!-- Playful changing prompt bubble when she tries to tap "No" -->
+        <div class="min-h-[32px] mt-4 flex items-center justify-center">
+          <p
+            id="noPromptBubble"
+            class="text-sm font-medium text-roseDeep bg-rose-50 px-3.5 py-1 rounded-full opacity-0 transition-opacity duration-200"
+          ></p>
+        </div>
+
+        <!-- Bounded Interactive Arena so "No" never escapes off-screen -->
+        <div
+          id="buttonArena"
+          class="relative w-full h-56 mt-4 rounded-2xl bg-cream/70 border border-dashed border-rose-200/80 overflow-hidden select-none"
+        >
+          <!-- Primary YES Button (centered neatly in upper half initially) -->
+          <div class="absolute inset-x-0 top-7 flex justify-center pointer-events-none z-10">
+            <button
+              id="yesBtn"
+              type="button"
+              class="pointer-events-auto px-9 py-3.5 rounded-2xl bg-gradient-to-r from-roseDeep to-roseSoft text-white font-bold text-lg shadow-lg shadow-rose-300/60 hover:shadow-rose-400/70 active:scale-95"
+            >
+              Yes ❤️
+            </button>
+          </div>
+
+          <!-- Playful Dodging NO Button -->
+          <button
+            id="noBtn"
+            type="button"
+            class="absolute px-6 py-2.5 rounded-2xl bg-white border border-gray-200 text-gray-600 font-semibold text-sm shadow-sm hover:bg-gray-50 z-20 touch-none"
+            style="left: 50%; top: 72%; transform: translate(-50%, -50%);"
+          >
+            No
+          </button>
+        </div>
+
+        <p class="mt-4 text-xs text-gray-400">
+          (Hint: one of these buttons is a little shy)
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         FINALE: CELEBRATION SCREEN
+         ============================================================ -->
+    <section id="actFinale" class="act-panel act-hidden min-h-screen flex flex-col justify-center py-10">
+      <div class="bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-xl shadow-rose-200/50 border border-rose-100 text-center">
+        <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-rose-50 text-roseDeep text-xs font-bold tracking-wider uppercase mb-4">
+          <span>🎉</span> Official
+        </div>
+
+        <h2
+          id="celebrationTitle"
+          class="font-serif italic text-3xl sm:text-4xl font-bold text-roseDeep leading-tight"
+        ></h2>
+
+        <p
+          id="celebrationMessage"
+          class="mt-4 text-gray-600 text-base leading-relaxed"
+        ></p>
+
+        <!-- Polaroid Keepsake Frame -->
+        <div class="mt-7 mb-7 max-w-[260px] mx-auto -rotate-1 hover:rotate-0 transition-transform duration-300">
+          <div class="polaroid">
+            <div
+              id="keepsakeMedia"
+              class="w-full h-44 rounded-lg bg-gradient-to-br from-blush via-rose-100 to-cream flex flex-col items-center justify-center overflow-hidden relative"
+            >
+              <!-- Optional keepsake image or sweet monogram fallback -->
+              <span class="text-5xl mb-2">🥰</span>
+              <span id="keepsakeCoupleNames" class="font-serif italic font-bold text-roseDeep text-lg"></span>
+            </div>
+            <div class="mt-3 flex items-center justify-between px-1">
+              <span class="font-serif italic text-sm text-gray-700">She said yes!</span>
+              <span id="keepsakeDate" class="text-xs font-medium text-gray-400"></span>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-sm font-medium text-gray-500 mb-6">
+          — Yours, <span id="signedHisName" class="font-serif italic text-ink font-semibold text-base"></span> ❤️
+        </p>
+
+        <!-- Action Buttons: Direct WhatsApp + Replay -->
+        <div class="flex flex-col items-center gap-3">
+          <a
+            href="https://api.whatsapp.com/send?phone=2347044856595&text=I%20just%20said%20YES!%20%F0%9F%92%96%F0%9F%A5%B0"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold text-sm shadow-md shadow-green-300/50 active:scale-95 transition-all"
+          >
+            Tell him on WhatsApp 💬
+          </a>
+
+          <button
+            id="replayBtn"
+            type="button"
+            class="px-6 py-3 rounded-2xl bg-cream border border-rose-200 text-roseDeep font-semibold text-sm hover:bg-blush/50 active:scale-95 transition-all"
+          >
+            ↺ Replay our story
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    /* =========================================================================
+       CUSTOMIZATION CONFIG — EDIT EVERYTHING FOR YOUR FRIEND RIGHT HERE!
+       ========================================================================= */
+    const CONFIG = {
+      herName: "Angela",
+      hisName: "Bruno",
+      introSubtitle:
+        "I wanted to put a few of my favorite moments with you in one place—and ask you something I've been thinking about for a while.",
+
+      // Act 1: 3 to 4 memory/milestone cards
+      // Add an imageUrl (e.g., "https://...") to show a real photo, or leave "" to show the styled emoji polaroid.
+      milestones: [
+        {
+          date: "Chapter 01",
+          title: "The day we first met",
+          note: "I didn't know it yet, but that single conversation was about to become the highlight of my whole year.",
+          emoji: "☕",
+          imageUrl: "",
+        },
+        {
+          date: "Chapter 02",
+          title: "Late-night laughs",
+          note: "Somehow two hours with you always feels like ten minutes. Talking to you is effortlessly my favorite part of the day.",
+          emoji: "🌙",
+          imageUrl: "",
+        },
+        {
+          date: "Chapter 03",
+          title: "Our favorite little adventure",
+          note: "Even doing completely ordinary things turns into a core memory the second you're around.",
+          emoji: "✨",
+          imageUrl: "",
+        },
+        {
+          date: "Right Now",
+          title: "Every day since",
+          note: "You make life warmer, funnier, and infinitely brighter. Which brings me to what's inside this envelope...",
+          emoji: "🌷",
+          imageUrl: "",
+        },
+      ],
+
+      // Act 2: 3 lighthearted trivia questions about the two of them
+      quizQuestions: [
+        {
+          question: "Where did our story officially begin?",
+          options: [
+            { text: "COS 201", reaction: "And it was instantly the best class I've ever had. 👨‍🏫" },
+            { text: "Through mutual friends", reaction: "Remind me to thank them forever for that introduction. 🙌" },
+            { text: "Randomly online", reaction: "Proof that the algorithm actually got something right! ✨" },
+            { text: "Pure destiny", reaction: "Honestly, the only scientifically accurate answer. 💫" },
+          ],
+        },
+        {
+          question: "Be completely honest: who is officially the funnier one?",
+          options: [
+            { text: "Definitely me", reaction: "Bold claim... I'll let you have this one (mostly because I love your laugh). 😄" },
+            { text: "Okay fine, it's you", reaction: "Finally! Screenshot saved for future reference. 🏆" },
+            { text: "We're an elite comedy duo", reaction: "Undefeated together. No notes. 🎭" },
+          ],
+        },
+        {
+          question: "What's our undisputed best vibe together?",
+          options: [
+            { text: "Good food & endless talking", reaction: "My favorite date plan, every single time. 🍝" },
+            { text: "Texting during class", reaction: "10/10 elite comfort level. 🍿" },
+            { text: "Honestly, anything together", reaction: "Couldn't have said it better myself. ❤️" },
+          ],
+        },
+      ],
+
+      // Act 3: The Big Question & Playful "No" Prompts
+      finalQuestion: "Will you be my girlfriend?",
+      noButtonPrompts: [
+        "Are you sure? 🥺",
+        "Nice try 👀",
+        "Think again...",
+        "Wrong button!",
+        "You're really testing me 😅",
+        "Okay, just hit Yes already ❤️",
+      ],
+
+      // Finale: Celebration text & optional keepsake photo
+      celebrationTitle: "You just made me the happiest guy!",
+      celebrationMessage:
+        "I can't wait for all the dates, laughs, and memories we haven't even made yet. Thank you for being mine.",
+      keepsakeImageUrl: "", // Optional photo URL for the final polaroid keepsake
+
+      // WhatsApp Silent Notification (CallMeBot)
+      whatsappPhone: "2347044856595", // Country code + number, no '+'
+      callMeBotApiKey: "123456",      // Replace with your real CallMeBot API key
+    };
+
+    /* =========================================================================
+       STATE & DOM REFERENCES
+       ========================================================================= */
+    const state = {
+      envelopeOpened: false,
+      currentQuizIdx: 0,
+      quizAnswers: [],
+      noAttempts: 0,
+      yesScale: 1,
+      noScale: 1,
+      celebrating: false,
+    };
+
+    const el = {
+      ambientBg: document.getElementById("ambientBg"),
+      act1: document.getElementById("act1"),
+      act2: document.getElementById("act2"),
+      act3: document.getElementById("act3"),
+      actFinale: document.getElementById("actFinale"),
+
+      // Act 1
+      heroHerName: document.getElementById("heroHerName"),
+      heroSubtitle: document.getElementById("heroSubtitle"),
+      milestonesList: document.getElementById("milestonesList"),
+      envelopeWrapper: document.getElementById("envelopeWrapper"),
+      envelopePrompt: document.getElementById("envelopePrompt"),
+      envelopeContinueWrap: document.getElementById("envelopeContinueWrap"),
+      startQuizBtn: document.getElementById("startQuizBtn"),
+
+      // Act 2
+      quizProgressText: document.getElementById("quizProgressText"),
+      quizPercentText: document.getElementById("quizPercentText"),
+      quizProgressBar: document.getElementById("quizProgressBar"),
+      quizQuestionText: document.getElementById("quizQuestionText"),
+      quizOptions: document.getElementById("quizOptions"),
+      quizReactionBox: document.getElementById("quizReactionBox"),
+      quizReactionText: document.getElementById("quizReactionText"),
+      quizNextBtn: document.getElementById("quizNextBtn"),
+
+      // Act 3
+      finalHerName: document.getElementById("finalHerName"),
+      finalQuestionText: document.getElementById("finalQuestionText"),
+      noPromptBubble: document.getElementById("noPromptBubble"),
+      buttonArena: document.getElementById("buttonArena"),
+      yesBtn: document.getElementById("yesBtn"),
+      noBtn: document.getElementById("noBtn"),
+
+      // Finale
+      celebrationTitle: document.getElementById("celebrationTitle"),
+      celebrationMessage: document.getElementById("celebrationMessage"),
+      keepsakeMedia: document.getElementById("keepsakeMedia"),
+      keepsakeCoupleNames: document.getElementById("keepsakeCoupleNames"),
+      keepsakeDate: document.getElementById("keepsakeDate"),
+      signedHisName: document.getElementById("signedHisName"),
+      replayBtn: document.getElementById("replayBtn"),
+
+      // Canvas
+      confettiCanvas: document.getElementById("confettiCanvas"),
+    };
+
+    /* =========================================================================
+       AMBIENT FLOATING HEARTS
+       ========================================================================= */
+    function initAmbientHearts() {
+      const heartChars = ["♥", "♡", "✿"];
+      const count = 14;
+      for (let i = 0; i < count; i++) {
+        const span = document.createElement("span");
+        span.className = "floating-heart";
+        span.textContent = heartChars[i % heartChars.length];
+        span.style.left = `${Math.random() * 94 + 3}%`;
+        span.style.fontSize = `${Math.random() * 14 + 12}px`;
+        span.style.animationDuration = `${Math.random() * 12 + 12}s`;
+        span.style.animationDelay = `${Math.random() * -20}s`;
+        el.ambientBg.appendChild(span);
+      }
+    }
+
+    /* =========================================================================
+       ACT 1: POPULATE STORY SCROLL & INTERSECTION OBSERVER
+       ========================================================================= */
+    function initAct1() {
+      el.heroHerName.textContent = CONFIG.herName;
+      el.heroSubtitle.textContent = CONFIG.introSubtitle;
+
+      el.milestonesList.innerHTML = "";
+      CONFIG.milestones.forEach((item, idx) => {
+        const card = document.createElement("article");
+        card.className = "relative reveal-card";
+
+        // Alternating subtle polaroid tilt
+        const tiltClass = idx % 2 === 0 ? "-rotate-1" : "rotate-1";
+
+        // Build polaroid media (supports optional imageUrl with fallback)
+        const mediaHtml = item.imageUrl
+          ? `<img src="${item.imageUrl}" alt="${item.title}" class="w-full h-40 object-cover rounded-lg" onerror="this.outerHTML='<div class=\\'w-full h-40 rounded-lg bg-gradient-to-br from-blush to-cream flex items-center justify-center text-5xl\\'>${item.emoji || '❤️'}</div>'" />`
+          : `<div class="w-full h-36 rounded-lg bg-gradient-to-br from-blush/90 via-rose-50 to-cream flex items-center justify-center text-5xl shadow-inner">${item.emoji || "❤️"}</div>`;
+
+        card.innerHTML = `
+          <!-- Timeline dot -->
+          <span class="absolute -left-[25px] top-6 w-4 h-4 rounded-full bg-roseDeep border-4 border-cream shadow-sm"></span>
+
+          <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg shadow-rose-200/35 border border-rose-100/90">
+            <span class="inline-block px-3 py-1 rounded-full bg-rose-50 text-roseDeep text-xs font-bold tracking-wide uppercase mb-3">
+              ${item.date}
+            </span>
+
+            <div class="polaroid mb-4 ${tiltClass} transition-transform duration-300 hover:rotate-0">
+              ${mediaHtml}
+            </div>
+
+            <h3 class="font-serif text-xl font-bold text-ink leading-snug mb-2">
+              ${item.title}
+            </h3>
+            <p class="text-sm text-gray-600 leading-relaxed">
+              ${item.note}
+            </p>
+          </div>
+        `;
+        el.milestonesList.appendChild(card);
+      });
+
+      // Scroll reveal observer
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.15, rootMargin: "0px 0px -30px 0px" }
+      );
+
+      document.querySelectorAll(".reveal-card").forEach((node) => observer.observe(node));
+    }
+
+    // Envelope tap/click handler
+    function openEnvelope() {
+      if (state.envelopeOpened) return;
+      state.envelopeOpened = true;
+      el.envelopeWrapper.classList.add("is-open");
+      el.envelopePrompt.textContent = "Opened with love 💌";
+      el.envelopePrompt.classList.remove("animate-pulse");
+
+      // Reveal button to enter Act 2
+      setTimeout(() => {
+        el.envelopeContinueWrap.classList.remove("opacity-0", "pointer-events-none", "translate-y-2");
+        el.envelopeContinueWrap.classList.add("opacity-100", "translate-y-0");
+      }, 550);
+    }
+
+    el.envelopeWrapper.addEventListener("click", openEnvelope);
+    el.envelopeWrapper.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openEnvelope();
+      }
+    });
+
+    /* =========================================================================
+       ACT TRANSITION HELPER
+       ========================================================================= */
+    function switchAct(showSection) {
+      [el.act1, el.act2, el.act3, el.actFinale].forEach((sec) => {
+        sec.classList.add("act-hidden");
+        sec.classList.remove("act-fade-in");
+      });
+      showSection.classList.remove("act-hidden");
+      showSection.classList.add("act-fade-in");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    el.startQuizBtn.addEventListener("click", () => {
+      state.currentQuizIdx = 0;
+      state.quizAnswers = [];
+      renderQuizQuestion();
+      switchAct(el.act2);
+    });
+
+    /* =========================================================================
+       ACT 2: THE MINI-QUIZ
+       ========================================================================= */
+    function renderQuizQuestion() {
+      const total = CONFIG.quizQuestions.length;
+      const q = CONFIG.quizQuestions[state.currentQuizIdx];
+      const stepNum = state.currentQuizIdx + 1;
+      const pct = Math.round((stepNum / total) * 100);
+
+      el.quizProgressText.textContent = `Question ${stepNum} of ${total}`;
+      el.quizPercentText.textContent = `${pct}%`;
+      el.quizProgressBar.style.width = `${pct}%`;
+      el.quizQuestionText.textContent = q.question;
+
+      // Reset reaction & next button
+      el.quizReactionBox.classList.add("hidden");
+      el.quizNextBtn.classList.add("hidden");
+      el.quizNextBtn.textContent =
+        stepNum === total ? "Final Question →" : "Next →";
+
+      // Render options
+      el.quizOptions.innerHTML = "";
+      q.options.forEach((opt, optIdx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className =
+          "quiz-option w-full text-left px-5 py-3.5 rounded-2xl border border-rose-100 bg-cream/60 hover:bg-blush/50 hover:border-rose-300 text-ink font-medium text-sm sm:text-base transition-all duration-200 flex items-center justify-between gap-3 active:scale-[0.99]";
+        btn.innerHTML = `
+          <span>${opt.text}</span>
+          <span class="option-dot w-5 h-5 rounded-full border-2 border-rose-200 flex-shrink-0 flex items-center justify-center text-[10px] text-white"></span>
+        `;
+
+        btn.addEventListener("click", () => handleQuizSelect(btn, opt, optIdx));
+        el.quizOptions.appendChild(btn);
+      });
+    }
+
+    function handleQuizSelect(selectedBtn, optionObj, optIdx) {
+      // Clear previous selection styles
+      el.quizOptions.querySelectorAll(".quiz-option").forEach((b) => {
+        b.classList.remove("bg-rose-50", "border-roseDeep", "ring-2", "ring-rose-200");
+        b.classList.add("bg-cream/60", "border-rose-100");
+        const dot = b.querySelector(".option-dot");
+        dot.classList.remove("bg-roseDeep", "border-roseDeep");
+        dot.textContent = "";
+      });
+
+      // Highlight tapped option
+      selectedBtn.classList.remove("bg-cream/60", "border-rose-100");
+      selectedBtn.classList.add("bg-rose-50", "border-roseDeep", "ring-2", "ring-rose-200");
+      const activeDot = selectedBtn.querySelector(".option-dot");
+      activeDot.classList.add("bg-roseDeep", "border-roseDeep");
+      activeDot.textContent = "✓";
+
+      // Save answer
+      state.quizAnswers[state.currentQuizIdx] = optionObj.text;
+
+      // Show reaction toast
+      el.quizReactionText.textContent = optionObj.reaction;
+      el.quizReactionBox.classList.remove("hidden");
+      el.quizReactionBox.classList.add("act-fade-in");
+
+      // Show Next / Final Question button
+      el.quizNextBtn.classList.remove("hidden");
+      el.quizNextBtn.classList.add("act-fade-in");
+    }
+
+    el.quizNextBtn.addEventListener("click", () => {
+      if (state.currentQuizIdx < CONFIG.quizQuestions.length - 1) {
+        state.currentQuizIdx++;
+        renderQuizQuestion();
+      } else {
+        initAct3();
+        switchAct(el.act3);
+      }
+    });
+
+    /* =========================================================================
+       ACT 3: THE PLAYFUL CLASSIC (DODGING "NO" BUTTON)
+       ========================================================================= */
+    function initAct3() {
+      el.finalHerName.textContent = CONFIG.herName;
+      el.finalQuestionText.textContent = CONFIG.finalQuestion;
+
+      // Reset playful state
+      state.noAttempts = 0;
+      state.yesScale = 1;
+      state.noScale = 1;
+
+      el.yesBtn.style.transform = "scale(1)";
+      el.noBtn.style.left = "50%";
+      el.noBtn.style.top = "74%";
+      el.noBtn.style.transform = "translate(-50%, -50%) scale(1)";
+      el.noBtn.textContent = "No";
+
+      el.noPromptBubble.textContent = "";
+      el.noPromptBubble.classList.remove("opacity-100");
+      el.noPromptBubble.classList.add("opacity-0");
+    }
+
+    function dodgeNoButton(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      const arena = el.buttonArena;
+      const noBtn = el.noBtn;
+      const yesBtn = el.yesBtn;
+
+      // Update attempt count & cycle playful prompt
+      const promptIdx = state.noAttempts % CONFIG.noButtonPrompts.length;
+      const promptText = CONFIG.noButtonPrompts[promptIdx];
+      state.noAttempts++;
+
+      el.noPromptBubble.textContent = promptText;
+      el.noPromptBubble.classList.remove("opacity-0");
+      el.noPromptBubble.classList.add("opacity-100");
+
+      // Gently scale Yes larger (capped at 1.28 so it stays clean on mobile)
+      state.yesScale = Math.min(1.28, 1 + state.noAttempts * 0.055);
+      yesBtn.style.transform = `scale(${state.yesScale})`;
+
+      // Slightly shrink No (capped at 0.78)
+      state.noScale = Math.max(0.78, 1 - state.noAttempts * 0.035);
+
+      // Compute safe bounded coordinates inside the interactive arena
+      const arenaRect = arena.getBoundingClientRect();
+      const yesRect = yesBtn.getBoundingClientRect();
+      const btnW = noBtn.offsetWidth * state.noScale;
+      const btnH = noBtn.offsetHeight * state.noScale;
+
+      const pad = 14;
+      const minX = pad + btnW / 2;
+      const maxX = Math.max(minX + 10, arenaRect.width - pad - btnW / 2);
+      const minY = pad + btnH / 2;
+      const maxY = Math.max(minY + 10, arenaRect.height - pad - btnH / 2);
+
+      // Yes button bounds relative to arena (avoid overlapping Yes)
+      const yesRel = {
+        left: yesRect.left - arenaRect.left - 12,
+        right: yesRect.right - arenaRect.left + 12,
+        top: yesRect.top - arenaRect.top - 12,
+        bottom: yesRect.bottom - arenaRect.top + 12,
+      };
+
+      const curLeft = parseFloat(noBtn.style.left) || arenaRect.width / 2;
+      const curTop = parseFloat(noBtn.style.top) || arenaRect.height * 0.74;
+
+      let bestX = minX;
+      let bestY = maxY;
+      let bestScore = -1;
+
+      // Try several random candidates and pick one that doesn't overlap Yes and moves noticeably
+      for (let i = 0; i < 24; i++) {
+        const cx = minX + Math.random() * (maxX - minX);
+        const cy = minY + Math.random() * (maxY - minY);
+
+        const overlapsYes =
+          cx + btnW / 2 > yesRel.left &&
+          cx - btnW / 2 < yesRel.right &&
+          cy + btnH / 2 > yesRel.top &&
+          cy - btnH / 2 < yesRel.bottom;
+
+        const distFromCurrent = Math.hypot(cx - curLeft, cy - curTop);
+        const score = (overlapsYes ? 0 : 1000) + distFromCurrent;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestX = cx;
+          bestY = cy;
+        }
+      }
+
+      noBtn.style.left = `${bestX}px`;
+      noBtn.style.top = `${bestY}px`;
+      noBtn.style.transform = `translate(-50%, -50%) scale(${state.noScale})`;
+    }
+
+    // Bind both desktop hover/click AND mobile touchstart
+    el.noBtn.addEventListener("mouseenter", dodgeNoButton);
+    el.noBtn.addEventListener("touchstart", dodgeNoButton, { passive: false });
+    el.noBtn.addEventListener("click", dodgeNoButton);
+
+    /* =========================================================================
+       FINALE: CELEBRATION, WHATSAPP NOTIFICATION & CANVAS CONFETTI/HEARTS
+       ========================================================================= */
+    function notifyWhatsApp() {
+      if (!CONFIG.whatsappPhone || !CONFIG.callMeBotApiKey) return;
+      const text = encodeURIComponent(`${CONFIG.herName} SAID YES!! 🎉❤️`);
+      const url = `https://api.callmebot.com/whatsapp.php?phone=${CONFIG.whatsappPhone}&text=${text}&apikey=${CONFIG.callMeBotApiKey}`;
+
+      // mode: 'no-cors' lets the browser fire the GET request silently
+      fetch(url, { mode: "no-cors" }).catch(() => {});
+    }
+
+    function showFinale() {
+      el.celebrationTitle.textContent = CONFIG.celebrationTitle;
+      el.celebrationMessage.textContent = CONFIG.celebrationMessage;
+      el.signedHisName.textContent = CONFIG.hisName;
+      el.keepsakeCoupleNames.textContent = `${CONFIG.hisName} & ${CONFIG.herName}`;
+
+      const today = new Date();
+      el.keepsakeDate.textContent = today.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+
+      if (CONFIG.keepsakeImageUrl) {
+        el.keepsakeMedia.innerHTML = `<img src="${CONFIG.keepsakeImageUrl}" alt="Us" class="w-full h-full object-cover" onerror="this.outerHTML='<span class=\\'text-5xl mb-2\\'>🥰</span><span class=\\'font-serif italic font-bold text-roseDeep text-lg\\'>${CONFIG.hisName} & ${CONFIG.herName}</span>'" />`;
+      }
+
+      switchAct(el.actFinale);
+      launchConfettiAndHearts();
+      notifyWhatsApp();
+    }
+
+    el.yesBtn.addEventListener("click", showFinale);
+
+    // Replay our story
+    el.replayBtn.addEventListener("click", () => {
+      stopConfetti();
+      state.envelopeOpened = false;
+      el.envelopeWrapper.classList.remove("is-open");
+      el.envelopePrompt.textContent = "Tap the wax seal to open";
+      el.envelopePrompt.classList.add("animate-pulse");
+      el.envelopeContinueWrap.classList.add("opacity-0", "pointer-events-none", "translate-y-2");
+      el.envelopeContinueWrap.classList.remove("opacity-100", "translate-y-0");
+      switchAct(el.act1);
+    });
+
+    /* =========================================================================
+       HTML5 CANVAS CONFETTI + HEART BURST ENGINE
+       ========================================================================= */
+    const ctx = el.confettiCanvas.getContext("2d");
+    let particles = [];
+    let animFrameId = null;
+
+    function resizeCanvas() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      el.confettiCanvas.width = window.innerWidth * dpr;
+      el.confettiCanvas.height = window.innerHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener("resize", resizeCanvas);
+
+    function drawHeart(c, x, y, size, rotation, color, alpha) {
+      c.save();
+      c.translate(x, y);
+      c.rotate(rotation);
+      c.globalAlpha = alpha;
+      c.fillStyle = color;
+      c.beginPath();
+      const s = size * 0.55;
+      c.moveTo(0, s * 0.35);
+      c.bezierCurveTo(-s, -s * 0.45, -s * 1.15, s * 0.75, 0, s * 1.45);
+      c.bezierCurveTo(s * 1.15, s * 0.75, s, -s * 0.45, 0, s * 0.35);
+      c.fill();
+      c.restore();
+    }
+
+    function spawnBurst(originX, originY, count) {
+      const colors = ["#E11D48", "#FB7185", "#FDA4AF", "#FBBF24", "#F472B6", "#FFFFFF"];
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 7 + 3.5;
+        particles.push({
+          x: originX,
+          y: originY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - Math.random() * 4.5,
+          gravity: 0.14 + Math.random() * 0.08,
+          drag: 0.985,
+          size: Math.random() * 8 + 6,
+          rotation: Math.random() * Math.PI * 2,
+          vRot: (Math.random() - 0.5) * 0.16,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          isHeart: Math.random() > 0.42,
+          alpha: 1,
+          decay: 0.005 + Math.random() * 0.006,
+        });
+      }
+    }
+
+    function animateConfetti() {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.vx *= p.drag;
+        p.vy = p.vy * p.drag + p.gravity;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rotation += p.vRot;
+        p.alpha -= p.decay;
+
+        if (p.alpha <= 0 || p.y > window.innerHeight + 40) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        if (p.isHeart) {
+          drawHeart(ctx, p.x, p.y, p.size, p.rotation, p.color, p.alpha);
+        } else {
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation);
+          ctx.globalAlpha = p.alpha;
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 3, p.size, p.size * 0.55);
+          ctx.restore();
+        }
+      }
+
+      if (particles.length > 0) {
+        animFrameId = requestAnimationFrame(animateConfetti);
+      } else {
+        animFrameId = null;
+      }
+    }
+
+    function launchConfettiAndHearts() {
+      resizeCanvas();
+      particles = [];
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
+      // Center burst + two delayed side bursts for a lively celebration
+      spawnBurst(w * 0.5, h * 0.45, 85);
+      setTimeout(() => spawnBurst(w * 0.25, h * 0.5, 45), 260);
+      setTimeout(() => spawnBurst(w * 0.75, h * 0.5, 45), 480);
+
+      if (!animFrameId) {
+        animFrameId = requestAnimationFrame(animateConfetti);
+      }
+    }
+
+    function stopConfetti() {
+      particles = [];
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    }
+
+    /* =========================================================================
+       BOOT ON WINDOW LOAD
+       ========================================================================= */
+    window.addEventListener("load", () => {
+      resizeCanvas();
+      initAmbientHearts();
+      initAct1();
+    });
+  </script>
+</body>
+</html>
